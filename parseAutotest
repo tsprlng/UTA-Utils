@@ -1,0 +1,97 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * Function used to preview the string data from a file to be written, in one short line.
+ */
+function abbreviateString($str)
+{
+    return trim(substr(str_replace("\n",' ', $str), 0, 40));
+}
+
+function enscript($path, $output)
+{
+    system("enscript -q -E $path -p $output -f DejaVuSansMono6.5 -F CenturySchoolbookLRoman10 -r -2 -J $path -b '$path||page $% of $=' -C --word-wrap --margins=15:15:15:15");
+}
+
+if($argc != 2)
+    die("Please pass in the name of the autotests file to be parsed\n");
+
+$oD = $outputDir = '.';
+$iF = $inputFile = $argv[1];
+$iD = $inputData = file_get_contents($iF);
+
+// Define what a header looks like so we can split based on them. (line of 72 dashes, any line, line of 72 dashes)
+$separator  = '------------------------------------------------------------------------';
+$headerPattern = "/{$separator}\n(.*)\n{$separator}\n/";
+
+
+// HACK ALERT. Convert 'now for the tests...' into a proper header.
+$iD = str_replace('------------------------Now for the tests.------------------------', $separator."\n\"Now for the tests\"\n".$separator."\n", $iD);
+
+
+// Get all headers
+$headerCount = preg_match_all($headerPattern, $iD, &$headers);
+$headers = $headers[1];
+
+//var_dump($headers);
+
+// Get everyone's names!
+// $names[doclogin10] = Full Name
+$names = array();
+
+foreach($headers as $h)
+{
+    if(preg_match("/[[:alpha:]] report for ([[:alnum:]]*) \((.*)\)'s submission/", $h, &$bits))
+        $names[$bits[1]] = $bits[2];
+}
+
+echo("\n** Your students (making a directory per student):\n");
+foreach($names as $l=>$n)
+{
+    echo("{$l} ({$n})\n");
+    if(!is_dir($oD.'/'.$l))
+        mkdir($oD.'/'.$l, 0744);
+}
+
+// FINALLY!:
+
+echo("\n** Files written:\n");
+
+// Split based on header
+$stuff = preg_split($headerPattern, $iD, -1, PREG_SPLIT_DELIM_CAPTURE);
+
+$defaultDestination = 'dump.txt'; // where to dump sections where no destination file can be obtained from the header
+
+// Then put the content between the headers in appropriate files
+for($i=1; $i<count($stuff); $i+=2) // start at 1 to skip pointless shit at start of file and go to first header
+{
+    $destination = null;
+    if(preg_match("/Test report for ([[:alnum:]]*) \((.*)\)'s submission/", $stuff[$i], &$bits))
+    {
+        $destination = $bits[1].'/testreport.txt';
+        $defaultDestination = $destination; // so any silly stuff after this ends up in test data
+    }
+    else if(preg_match("/^([^']*)'s ([^ ]*):$/", $stuff[$i], &$bits))
+        $destination = array_search($bits[1], $names).'/'.$bits[2];
+    
+    $stuff[$i+1] = trim($stuff[$i+1], " \t\n\r\0\x0B\f");
+
+    if($destination == null)
+    {
+        echo("NO DESTINATION for " . abbreviateString($stuff[$i]) . "||" . abbreviateString($stuff[$i+1]) . "\n");
+        echo("APPENDING to " . $defaultDestination . " instead\n");
+        file_put_contents($oD.'/'.$defaultDestination, "\n\n===".$stuff[$i]."===\n", FILE_APPEND);
+        file_put_contents($oD.'/'.$defaultDestination, $stuff[$i+1]."\n", FILE_APPEND);
+        enscript($defaultDestination, "$defaultDestination.ps");
+    }
+    else
+    {
+        echo(str_pad($destination, 26) . abbreviateString($stuff[$i+1]) . "\n");
+        file_put_contents($oD.'/'.$destination, $stuff[$i+1]."\n\n");
+        enscript($destination, "$destination.ps");
+    }
+}
+
+?>
+
