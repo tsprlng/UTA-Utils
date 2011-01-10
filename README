@@ -1,0 +1,11 @@
+The idea of these utilities is simple.
+
+- parseAutotest, given an autotest results file as an argument, makes a
+  directory within the current directory for each student, and fills each one
+  with their source files plus a file for tests/results. It also produces
+  a printable .ps version of each, using enscript.
+
+- printAutotest, with the optional argument -p to make it print straight away,
+  generates a pdf file per student from all their files' generated postscript
+  versions, and optionally (given -p) prints these directly to ICTMono, syntax
+  highlighted and separately stapled in landscape (two columns)
