@@ -87,6 +87,8 @@ for($i=1; $i<count($stuff); $i+=2) // start at 1 to skip pointless shit at start
     }
     else
     {
+        if(preg_match("_(.*)/[^/]*_", $destination, &$filePath))
+            mkdir($oD.'/'.$filePath[1], 0744, true);
         echo(str_pad($destination, 26) . abbreviateString($stuff[$i+1]) . "\n");
         file_put_contents($oD.'/'.$destination, $stuff[$i+1]."\n\n");
         enscript($destination, "$destination.ps");
