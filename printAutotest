@@ -3,7 +3,7 @@
 for i in *
 do
   # magically combine everything
-  find $i -name \*.ps ! -name testreport.txt.ps -print0 | xargs -0 gs -q -dBATCH -dNOPAUSE -sDEVICE=pdfwrite -sOutputFile=$i/printout.pdf
+  find $i -name \*.ps ! -name testreport.txt.ps -print0 | xargs -0 gs -q -dBATCH -dNOPAUSE -sDEVICE=pdfwrite -sOutputFile=$i/printout.pdf $i/testreport.txt.ps
   # print it out
   if [ "$1" == "-p" -o "$1" == "-print" ]
   then
