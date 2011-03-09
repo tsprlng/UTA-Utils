@@ -9,3 +9,12 @@ The idea of these utilities is simple.
   generates a pdf file per student from all their files' generated postscript
   versions, and optionally (given -p) prints these directly to ICTMono, syntax
   highlighted and separately stapled in landscape (two columns)
+
+Yes, I know the code is awful. It was hacked together in half an hour when I
+got the first submission and realized their page-break-splitting print utility
+thing wasn't good enough.
+
+If you want to refactor it into something nice and can actually be bothered,
+please do.
+
+At least it works :).
