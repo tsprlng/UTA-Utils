@@ -17,4 +17,5 @@ thing wasn't good enough.
 If you want to refactor it into something nice and can actually be bothered,
 please do.
 
-At least it works :).
+At least it works :). And having the files split up for you properly is really
+useful for compiling/debugging/testing the students' code!
