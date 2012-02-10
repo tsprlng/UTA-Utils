@@ -1,0 +1,67 @@
+#!/usr/bin/python
+
+import argparse, os, shutil, subprocess, sys, textwrap
+import ConfigParser
+
+class Config:
+  def __init__(self, configFile):
+    self.configFile = os.path.expanduser(configFile)
+    self.parser = ConfigParser.SafeConfigParser()
+    try:
+      fp = open(self.configFile)
+    except:
+      shutil.copy2(sys.path[0]+'/uta-utils.conf.default',self.configFile)
+      print 'Please edit the config file then try again...'
+      ed = os.getenv('EDITOR') or 'vim'
+      subprocess.call([ed,self.configFile])
+      exit(2)
+    self.parser.readfp(fp)
+    fp.close()
+  
+  @property
+  def students(self):
+    return self.parser.items('Students')
+
+#####################################################################
+#####################################################################
+
+def fetch(cmd, desc):
+  parser = argparse.ArgumentParser(description=desc,
+                                   prog='{0} {1}'.format('uta', cmd),
+                                   epilog='''This will create a subdirectory for each student in the current directory, with each containing that student's Git repository''')
+  parser.add_argument('exercise',
+                      help='''The name of the exercise, e.g. TurtleInterpreter''')
+  args = parser.parse_args(sys.argv[2:])
+  for login, name in config.students:
+    cmd = 'git clone /vol/lab/firstyear/Repositories/2011-2012/161/{0}/{1}.git {0}'.format(login, args.exercise)
+    print cmd
+    subprocess.call(cmd, shell=True)
+
+def listStudents(cmd, desc):
+  for login, name in config.students:
+    print "{0} : {1}".format(login, name)
+
+#####################################################################
+#####################################################################
+
+functions = {
+  'fetch' : ('Fetch your students\' repositories', fetch),
+  'students' : ('List your students', listStudents),
+}
+
+#####################################################################
+#####################################################################
+
+config = Config(sys.path[0]+'/uta-utils.conf')
+
+try:
+  (desc, f) = functions[sys.argv[1]]
+except:
+  print textwrap.dedent('''\
+    usage: {0} command [-h/--help]
+
+    Available commands:''').format('uta')
+  for n,(d,f) in functions.items():
+    print("  {0}: {1}".format(n, d))
+  exit(1)
+f(sys.argv[1], desc)

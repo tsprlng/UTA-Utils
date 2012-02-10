@@ -1,0 +1,9 @@
+Are you a UTA in Imperial College's DoC?
+
+If so you may enjoy this repo.
+
+This is a nice simple Python script for managing students' code locally.
+
+Currently all it does is let you neatly clone all your students' code with one command, 'uta fetch LabExercisename'.
+
+Soon it will do more, and hopefully get prettier as well...
