@@ -22,6 +22,20 @@ class Config:
   def students(self):
     return self.parser.items('Students')
 
+class Repo:
+  def __init__(self, dir):
+    self.dir = dir
+  
+  @property
+  def rootCommit(self):
+    return subprocess.check_output('git rev-list HEAD --parents|grep "^[a-f0-9]*$"|tail -n1',
+                                   cwd=self.dir, shell=True).strip()
+  
+  @property
+  def diffFiles(self):
+    return subprocess.check_output('git diff-tree -r HEAD {0} --name-only'.format(self.rootCommit),
+                                   cwd=self.dir, shell=True).strip().splitlines()
+
 #####################################################################
 #####################################################################
 
@@ -37,6 +51,18 @@ def fetch(cmd, desc):
     print cmd
     subprocess.call(cmd, shell=True)
 
+def diff(cmd, desc):
+  parser = argparse.ArgumentParser(description=desc,
+                                   prog='{0} {1}'.format('uta', cmd))
+  group = parser.add_mutually_exclusive_group()
+  group.add_argument('--all',
+                      help='''Work on all subdirectories''', action='store_true')
+  group.add_argument('dir',
+                      help='''The repository to be checked''', default='.', nargs='?')
+  args = parser.parse_args(sys.argv[2:])
+  for f in Repo(args.dir).diffFiles:
+    print f
+
 def listStudents(cmd, desc):
   for login, name in config.students:
     print "{0} : {1}".format(login, name)
@@ -46,6 +72,7 @@ def listStudents(cmd, desc):
 
 functions = {
   'fetch' : ('Fetch your students\' repositories', fetch),
+  'diff' : ('List the modified files that will be printed', diff),
   'students' : ('List your students', listStudents),
 }
 
