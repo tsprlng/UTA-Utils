@@ -27,7 +27,7 @@ class Repo:
     self.dir = dir
   
   def enscriptShit(self,files):
-    postscript = ''.join(map(lambda f: subprocess.check_output("enscript -q -E {0} -p - -f DejaVuSansMono6.5 -F CenturySchoolbookLRoman10 -r -2 -J {0} -b '{0}||page $% of $=' -C --word-wrap --margins=15:15:15:15".format(f), cwd=self.dir, shell=True), files))
+    postscript = ''.join(map(lambda f: subprocess.check_output("enscript -q -E {0} -p - -f DejaVuSansMono6.5 -F CenturySchoolbookLRoman10 -r -2 -J {0} -b '{1} : {0}||page $% of $=' -C --word-wrap --margins=15:15:15:15".format(f, self.dir), cwd=self.dir, shell=True), files))
     pdfer = subprocess.Popen('ps2pdf - - > print.pdf', cwd=self.dir, shell=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
     pdfer.communicate(input=postscript)
     pdfer.stdin.close()
