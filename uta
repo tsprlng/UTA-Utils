@@ -26,6 +26,15 @@ class Repo:
   def __init__(self, dir):
     self.dir = dir
   
+  def enscriptShit(self,files):
+    postscript = ''.join(map(lambda f: subprocess.check_output("enscript -q -E {0} -p - -f DejaVuSansMono6.5 -F CenturySchoolbookLRoman10 -r -2 -J {0} -b '{0}||page $% of $=' -C --word-wrap --margins=15:15:15:15".format(f), cwd=self.dir, shell=True), files))
+    pdfer = subprocess.Popen('ps2pdf - - > print.pdf', cwd=self.dir, shell=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+    pdfer.communicate(input=postscript)
+    pdfer.stdin.close()
+
+  def printPDF(self):
+    subprocess.check_call('lpr -C {0} -PICTmono -o sides=two-sided-long-edge -o OutputBin=UStapler -o HPStaplerOptions=3parallel print.pdf'.format(self.dir), cwd=self.dir, shell=True)
+  
   @property
   def rootCommit(self):
     return subprocess.check_output('git rev-list HEAD --parents|grep "^[a-f0-9]*$"|tail -n1',
@@ -63,6 +72,21 @@ def diff(cmd, desc):
   for f in Repo(args.dir).diffFiles:
     print f
 
+def printDiff(cmd, desc):
+  parser = argparse.ArgumentParser(description=desc,
+                                   prog='{0} {1}'.format('uta', cmd))
+  parser.add_argument('-p', '--print', dest='shouldPrint',
+                      help='Actually print the stuff to ICTMono now', action='store_true')
+  group = parser.add_mutually_exclusive_group()
+  group.add_argument('--all',
+                      help='''Work on all subdirectories''', action='store_true')
+  group.add_argument('dir',
+                      help='''The repository to be printed''', default='.', nargs='?')
+  args = parser.parse_args(sys.argv[2:])
+  r = Repo(args.dir)
+  r.enscriptShit(r.diffFiles)
+  if (args.shouldPrint): r.printPDF()
+
 def listStudents(cmd, desc):
   for login, name in config.students:
     print "{0} : {1}".format(login, name)
@@ -73,6 +97,7 @@ def listStudents(cmd, desc):
 functions = {
   'fetch' : ('Fetch your students\' repositories', fetch),
   'diff' : ('List the modified files that will be printed', diff),
+  'print' : ('Generate (and optionally print) PDF files of the files shown by diff', printDiff),
   'students' : ('List your students', listStudents),
 }
 
